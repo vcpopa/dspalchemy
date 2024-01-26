@@ -1,0 +1,11 @@
+.env
+logs
+.coverage
+certs
+.tox
+.pytest_cache
+__pycache__/
+*.egg-info/
+*.ipynb
+.vscode
+.mypy_cache
