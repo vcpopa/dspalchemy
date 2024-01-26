@@ -32,7 +32,7 @@ print(m)
 print(m.s1.v)
 # Output: [3]
 """
-
+# pylint: disable =unnecessary-pass
 import typing
 import copy
 from functools import cached_property
@@ -42,7 +42,6 @@ import matplotlib.pyplot as plt
 from dspalchemy.frame.utils import extract_column_name, are_models_equal
 
 
-# TODO IMPLEMENT "FROZEN" property where a Frame can no longer be modified
 class Frame(pd.DataFrame):
     """
     Initialize a Frame object with a Pydantic model and DataFrame data.
@@ -60,7 +59,7 @@ class Frame(pd.DataFrame):
         if data is None or data.empty:
             raise ValueError("DataFrame cannot be empty or None.")
 
-        super().__init__(data, **kwargs)
+        super().__init__(data, **kwargs)  # type: ignore [call-arg]
         self.model = model
 
     @property
@@ -218,7 +217,7 @@ class Frame(pd.DataFrame):
 
         for idx, record in enumerate(data, start=1):
             try:
-                self.model(**record)
+                self.model(**record)  # type: ignore [call-arg]
             except ValidationError as e:
                 for error in e.errors():
                     error_msg = {
@@ -302,7 +301,7 @@ class Frame(pd.DataFrame):
         for new_name, new_field in cols.items():
             if new_name not in self.model.__annotations__.keys():
                 fields[new_name] = (new_field, ...)
-        updated_model = create_model(self.model.__name__, __base__=self.model, **fields)
+        updated_model = create_model(self.model.__name__, __base__=self.model, **fields)  # type: ignore [attr-defined]
         # Assign the updated model to the Frame
         self.model = updated_model
         self._clear_cached_properties()
@@ -317,7 +316,7 @@ def create_joined_model(
     left_model: BaseModel,
     right_model: BaseModel,
     join_columns: typing.Union[str, typing.List[str]],
-) -> BaseModel:
+) -> type[BaseModel]:
     """
     Create a combined Pydantic model by joining two existing Pydantic models.
 
@@ -364,22 +363,11 @@ def create_joined_model(
         ):
             raise ValueError(f"Type mismatch for join column {join_column}.")
 
-    # Create the combined model
     combined_model = create_model(
-        left_model.__name__ + right_model.__name__, __base__=BaseModel, **fields
+        left_model.__name__ + right_model.__name__, __base__=BaseModel, **fields  # type: ignore [attr-defined]
     )
-    assert issubclass(combined_model, BaseModel), "Problem"
 
-    class CombinedModel(combined_model):
-        """_summary_
-
-        Args:
-            combined_model (_type_): _description_
-        """
-
-        pass
-
-    return CombinedModel
+    return combined_model
 
 
 def join_frames_and_models(
@@ -442,16 +430,16 @@ def concat_frames_and_models(frames: typing.List[Frame]) -> Frame:
     """
     # Extract models and data from frames
     models = [frame.model for frame in frames]
-    datas = [frame.copy() for frame in frames]
+    dfs = [frame.copy() for frame in frames]
 
     # Check if columns match among all DataFrames
-    first_columns = set(datas[0].columns)
-    for data in datas[1:]:
+    first_columns = set(dfs[0].columns)
+    for data in dfs[1:]:
         if set(data.columns) != first_columns:
             raise ValueError("Columns in DataFrames do not match.")
 
     # Concatenate DataFrames
-    result_df = pd.concat(datas, axis=0, ignore_index=True)
+    result_df = pd.concat(dfs, axis=0, ignore_index=True)
 
     # Check annotations (types) match between all models
     for i in range(1, len(models)):
