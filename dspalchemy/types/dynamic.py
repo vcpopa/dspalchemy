@@ -1,3 +1,4 @@
+# pylint: disable = unused-argument
 import typing
 import re
 from datetime import datetime, date
@@ -5,7 +6,6 @@ from pydantic import field_validator, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 from dspalchemy.types.utils import translate_optional_type_hint
 
-# TODO come up with a way to generalize this concept so I can only add validation functions
 T = typing.TypeVar("T")
 
 
@@ -72,9 +72,10 @@ class Lookup(typing.Generic[T], metaclass=LookupMeta):
         Raises:
         - ValueError: If the value is not of the correct type or not within the allowed values.
         """
-        if not isinstance(v, cls.__orig_bases__[0].__args__[0]):
+
+        if not isinstance(v, cls.__orig_bases__[0].__args__[0]):  # type: ignore [attr-defined]
             raise ValueError(
-                f"{v} must be of type {cls.__orig_bases__[0].__args__[0]}, got {type(v)}"
+                f"{v} must be of type {cls.__orig_bases__[0].__args__[0]}, got {type(v)}"  # type: ignore [attr-defined]
             )
         if v not in cls.allowed_values:
             raise ValueError(
@@ -183,6 +184,17 @@ class Regex(typing.Generic[T], metaclass=RegexMeta):
 
 
 class DateValidatorMeta(type):
+    """
+    Metaclass for DateValidator classes.
+
+    This metaclass validates the attributes of DateValidator to ensure correct usage.
+
+    Attributes:
+    - min_date (T): The minimum allowed date.
+    - max_date (T): The maximum allowed date.
+    - allowed_format (str): The allowed date format.
+    """
+
     def __init__(cls, name, bases, attrs):
         super().__init__(name, bases, attrs)
 
@@ -200,6 +212,17 @@ class DateValidatorMeta(type):
 
 
 class DateValidator(typing.Generic[T], metaclass=DateValidatorMeta):
+    """
+    A custom date validator class.
+
+    This class validates date values based on specified constraints.
+
+    Attributes:
+    - allowed_format (str): The allowed date format. Defaults to "%Y-%m-%d".
+    - min_date (T): The minimum allowed date.
+    - max_date (T): The maximum allowed date.
+    """
+
     allowed_format: str = "%Y-%m-%d"
     min_date: T = None
     max_date: T = None
@@ -209,8 +232,8 @@ class DateValidator(typing.Generic[T], metaclass=DateValidatorMeta):
         if isinstance(v, str):
             try:
                 parsed_date = datetime.strptime(v, cls.allowed_format).date()
-            except ValueError:
-                raise ValueError(f"Failed to convert {v} to a valid date")
+            except ValueError as exc:
+                raise ValueError(f"Failed to convert {v} to a valid date") from exc
 
             if cls.min_date is not None:
                 cls.min_date = (
