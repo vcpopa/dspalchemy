@@ -1,4 +1,4 @@
-#pylint: skip-file
+# pylint: skip-file
 import pytest
 from pydantic import BaseModel, ValidationError
 from dspalchemy.types.static import PostCode, CurrentFinancialYear, Email
