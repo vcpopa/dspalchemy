@@ -1,14 +1,17 @@
-name: Lint
+name: mypy
 
 on:
   push:
-    paths:
-      - '*.py'
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   mypy:
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
     steps:
       - name: Setup Python
         uses: actions/setup-python@v1

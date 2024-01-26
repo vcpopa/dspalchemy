@@ -25,7 +25,7 @@ jobs:
           black_args: ". --check"
 
   codespell:
-    name: Check for spelling errors
+    name: Codespell
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
