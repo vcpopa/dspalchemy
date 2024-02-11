@@ -58,7 +58,8 @@ class Frame(pd.DataFrame):
     def __init__(self, model: BaseModel, data: pd.DataFrame, **kwargs):
         if data is None or data.empty:
             raise ValueError("DataFrame cannot be empty or None.")
-
+        if not issubclass(model, BaseModel):
+            raise TypeError("Model must be a valid pydantic.BaseModel")
         super().__init__(data, **kwargs)  # type: ignore [call-arg]
         self.model = model
 
